@@ -5,6 +5,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDate;
+import java.util.Set;
 
 @Entity
 @Table(name = "users")
@@ -12,6 +13,7 @@ import java.time.LocalDate;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
 @Builder
 public class User {
     @Id
@@ -24,4 +26,7 @@ public class User {
     private String firstName;
     private String lastName;
     private LocalDate dob;
+
+    @ManyToMany
+    Set<Role> roles;
 }

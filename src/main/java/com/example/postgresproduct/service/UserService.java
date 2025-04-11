@@ -3,14 +3,19 @@ package com.example.postgresproduct.service;
 
 import com.example.postgresproduct.dto.request.UserCreationRequest;
 import com.example.postgresproduct.entity.ERole;
+import com.example.postgresproduct.entity.Role;
 import com.example.postgresproduct.entity.User;
 import com.example.postgresproduct.exception.AppException;
 import com.example.postgresproduct.exception.ErrorCode;
+import com.example.postgresproduct.mapper.UserMapper;
+import com.example.postgresproduct.repository.RoleRepository;
 import com.example.postgresproduct.repository.UserRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import com.example.postgresproduct.dto.response.UserResponse;
@@ -24,31 +29,22 @@ import java.util.Set;
 public class UserService {
     UserRepository userRepository;
     PasswordEncoder passwordEncoder;
+    @Autowired
+    UserMapper userMapper;
+    RoleRepository roleRepository;
 
-    public User createUser(UserCreationRequest request) {
-        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
-            throw new RuntimeException("Email already in use");
-        }
-        if(userRepository.existsByUsername(request.getUsername())) {
-            throw new RuntimeException("Username already exists");
-        }
-
-        User user = new User();
-        user.setUsername(request.getUsername());
-        user.setEmail(request.getEmail());
+    public UserResponse createUser(UserCreationRequest request) {
+        User user = userMapper.toUser(request);
         user.setPassword(passwordEncoder.encode(request.getPassword()));
 
         Set<String> roles = new HashSet<>();
         roles.add(ERole.USER.name());
+        try {
+            user = userRepository.save(user);
+        } catch (DataIntegrityViolationException exception) {
+            throw new AppException(ErrorCode.USER_EXISTED);
+        }
 
-//        user.setRoles(roles);
-
-        userRepository.save(user);
-        return UserResponse.builder()
-                .id(user.getId())
-                .username(user.getUsername())
-                .email(user.getEmail())
-                .roles(user.getRoles())
-                .build();
+        return userMapper.toUserResponse(user);
     }
 }

@@ -2,6 +2,7 @@ package com.example.postgresproduct.configuration;
 
 import com.example.postgresproduct.entity.ERole;
 import com.example.postgresproduct.entity.Role;
+import com.example.postgresproduct.entity.User;
 import com.example.postgresproduct.repository.RoleRepository;
 import com.example.postgresproduct.repository.UserRepository;
 import lombok.AccessLevel;
@@ -15,6 +16,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
+import java.util.Set;
 
 @Configuration
 @RequiredArgsConstructor
@@ -31,7 +33,7 @@ public class ApplicationInitConfig {
             Role adminRole = adminRoleOptional.orElseGet(() -> {
                 Role newRole = new Role();
                 log.info(String.valueOf(ERole.valueOf(ERole.ADMIN.name())));
-                newRole.setName(ERole.valueOf(ERole.ADMIN.name()));
+                newRole.setName(String.valueOf(ERole.valueOf(ERole.ADMIN.name())));
                 return roleRepository.save(newRole);
             });
 
@@ -43,7 +45,7 @@ public class ApplicationInitConfig {
                 User user = new User();
                 user.setUsername("admin");
                 user.setPassword(passwordEncoder.encode("admin"));
-                user.setRoles(Set.of(adminRole)); // Set the ADMIN role
+                user.setRoles(Set.of(adminRole));
                 userRepository.save(user);
                 log.warn("Admin user has been created with default password: admin. Please change it.");
             }
